@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  virtualtm-server:
+    build: .
+    ports:
+      - "8999:8999"
+    volumes:
+      - ./virtualtm.db:/app/virtualtm.db
+    environment:
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/dbus-session
+    command: ["sh", "-c", "dbus-daemon --session --address=unix:path=/tmp/dbus-session --fork && ./build/src/virtualtm-server"]
+    networks:
+      - virtualtm-network
+
+  virtualtm-client:
+    build: .
+    depends_on:
+      - virtualtm-server
+    volumes:
+      - ./virtualtm.db:/app/virtualtm.db
+    environment:
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/dbus-session
+    command: ["./build/src/virtualtm", "--list"]
+    networks:
+      - virtualtm-network
+    profiles:
+      - client
+
+networks:
+  virtualtm-network:
+    driver: bridge
