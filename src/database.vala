@@ -136,7 +136,7 @@ namespace VirtualTM
                   new RestApi.Credentials
                     (
                       select_payment_stmt.column_text (8),
-                      select_payment_stmt.column_int64 (5).to_string (),
+                      select_payment_stmt.column_text (5),
                       select_payment_stmt.column_text (9)
                     ),
                   new RestApi.PaymentParams

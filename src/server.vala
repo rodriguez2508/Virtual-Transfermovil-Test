@@ -53,13 +53,13 @@ namespace VirtualTM
 
           option_entries =
             {
-              { "bank", 0, 0, GLib.OptionArg.INT, ref bank_opt, "Set notification Bank field value to VALUE", "VALUE", },
-              { "bankid", 0, 0, GLib.OptionArg.INT, ref bankid_opt, "Set notification BankId field value to VALUE", "VALUE", },
+              { "bank", 0, 0, GLib.OptionArg.INT, (void*) &bank_opt, "Set notification Bank field value to VALUE", "VALUE", },
+              { "bankid", 0, 0, GLib.OptionArg.INT, (void*) &bankid_opt, "Set notification BankId field value to VALUE", "VALUE", },
               { "database", 'd', 0, GLib.OptionArg.FILENAME, ref database_opt, "Use database FILE", "FILE", },
               { "endpoint", 0, 0, GLib.OptionArg.STRING, ref endpoint_opt, "Expose REST API on endpoint NAME", "NAME", },
-              { "local", 'l', 0, GLib.OptionArg.NONE, ref local_opt, "Only listen locally", null, },
-              { "port", 'p', 0, GLib.OptionArg.INT, ref port_opt, "Listen to requests at port PORT", "PORT", },
-              { "tmid", 0, 0, GLib.OptionArg.INT, ref tmid_opt, "Set notification TmId field value to VALUE", "VALUE", },
+              { "local", 'l', 0, GLib.OptionArg.NONE, (void*) &local_opt, "Only listen locally", null, },
+              { "port", 'p', 0, GLib.OptionArg.INT, (void*) &port_opt, "Listen to requests at port PORT", "PORT", },
+              { "tmid", 0, 0, GLib.OptionArg.INT, (void*) &tmid_opt, "Set notification TmId field value to VALUE", "VALUE", },
               { "version", 'V', 0, GLib.OptionArg.NONE, null, "Print version and exit", null, },
             };
 

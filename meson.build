@@ -41,12 +41,12 @@ git_version_micro = git_version_list2.get (2)
 # Dependencies         #
 ########################
 
-libgio_dep = dependency ('gio-2.0', required : true, version : '>=2.78')
-libglib_dep = dependency ('glib-2.0', required : true, version : '>=2.78')
-libgobject_dep = dependency ('gobject-2.0', required : true, version : '>=2.78')
-libjson_dep = dependency ('json-glib-1.0', required : true, version : '>=1.8')
-libsoup_dep = dependency ('libsoup-3.0', required : true, version : '>=3.4.3')
-libsqlite_dep = dependency ('sqlite3', required : true, version : '>=3.43.1')
+libgio_dep = dependency ('gio-2.0', required : true, version : '>=2.72.4')
+libglib_dep = dependency ('glib-2.0', required : true, version : '>=2.72.4')
+libgobject_dep = dependency ('gobject-2.0', required : true, version : '>=2.72.4')
+libjson_dep = dependency ('json-glib-1.0', required : true, version : '>=1.6.6')
+libsoup_dep = dependency ('libsoup-3.0', required : true, version : '>=3.0.7')
+libsqlite_dep = dependency ('sqlite3', required : true, version : '>=3.37.2')
 
 ########################
 # Include directories  #
@@ -93,7 +93,7 @@ if cc.get_id () == 'gcc' or cc.get_id () == 'clang'
     '-Werror=missing-include-dirs',
     '-Werror=missing-prototypes',
     '-Werror=pointer-arith',
-    '-Werror=pointer-sign',
+
     '-Werror=unused-result',
     '-Wimplicit-fallthrough',
     '-Wmisleading-indentation',

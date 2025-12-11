@@ -41,9 +41,9 @@ namespace VirtualTM
 
           GLib.OptionEntry[] entries =
             {
-              { "list", 'l', GLib.OptionFlags.NONE, GLib.OptionArg.NONE, ref list_opt, "List pending payments", null, },
+              { "list", 'l', GLib.OptionFlags.NONE, GLib.OptionArg.NONE, (void*) &list_opt, "List pending payments", null, },
               { "pay", 'p', GLib.OptionFlags.NONE, GLib.OptionArg.STRING, ref externalid, "Set pending payment ID as completed", "ID", },
-              { "quit", 'q', GLib.OptionFlags.NONE, GLib.OptionArg.NONE, ref quit_opt, "Stop background daemon", null, },
+              { "quit", 'q', GLib.OptionFlags.NONE, GLib.OptionArg.NONE, (void*) &quit_opt, "Stop background daemon", null, },
               { "version", 'V', GLib.OptionFlags.NO_ARG, GLib.OptionArg.CALLBACK, (void*) handle_version, "Print version and exit", null, },
             };
 
