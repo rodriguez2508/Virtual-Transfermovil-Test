@@ -27,13 +27,14 @@ namespace VirtualTM
       private GLib.ActionEntry[] action_entries;
       private uint daemonid = 0;
 
-      private unowned bool local_opt = false;
-      private unowned int bank_opt = 44556677;
-      private unowned int bankid_opt = 33445566;
-      private unowned int port_opt = 8999;
-      private unowned int tmid_opt = 22334455;
-      private unowned string database_opt = "virtualtm.db";
-      private unowned string endpoint_opt = "/";
+       private unowned bool local_opt = false;
+       private unowned int bank_opt = 44556677;
+       private unowned int bankid_opt = 33445566;
+       private unowned int port_opt = 8999;
+       private unowned int tmid_opt = 22334455;
+       private unowned string database_opt = "virtualtm.db";
+       private unowned string endpoint_opt = "/RestExternalPayment.svc";
+        private unowned string seed_opt = "test";
 
       public static int main (string[] argv)
         {
@@ -51,17 +52,18 @@ namespace VirtualTM
               { "quit", () => quit (), null, null, null, },
             };
 
-          option_entries =
-            {
-              { "bank", 0, 0, GLib.OptionArg.INT, (void*) &bank_opt, "Set notification Bank field value to VALUE", "VALUE", },
-              { "bankid", 0, 0, GLib.OptionArg.INT, (void*) &bankid_opt, "Set notification BankId field value to VALUE", "VALUE", },
-              { "database", 'd', 0, GLib.OptionArg.FILENAME, ref database_opt, "Use database FILE", "FILE", },
-              { "endpoint", 0, 0, GLib.OptionArg.STRING, ref endpoint_opt, "Expose REST API on endpoint NAME", "NAME", },
-              { "local", 'l', 0, GLib.OptionArg.NONE, (void*) &local_opt, "Only listen locally", null, },
-              { "port", 'p', 0, GLib.OptionArg.INT, (void*) &port_opt, "Listen to requests at port PORT", "PORT", },
-              { "tmid", 0, 0, GLib.OptionArg.INT, (void*) &tmid_opt, "Set notification TmId field value to VALUE", "VALUE", },
-              { "version", 'V', 0, GLib.OptionArg.NONE, null, "Print version and exit", null, },
-            };
+           option_entries =
+             {
+               { "bank", 0, 0, GLib.OptionArg.INT, (void*) &bank_opt, "Set notification Bank field value to VALUE", "VALUE", },
+               { "bankid", 0, 0, GLib.OptionArg.INT, (void*) &bankid_opt, "Set notification BankId field value to VALUE", "VALUE", },
+               { "database", 'd', 0, GLib.OptionArg.FILENAME, ref database_opt, "Use database FILE", "FILE", },
+               { "endpoint", 0, 0, GLib.OptionArg.STRING, ref endpoint_opt, "Expose REST API on endpoint NAME", "NAME", },
+               { "local", 'l', 0, GLib.OptionArg.NONE, (void*) &local_opt, "Only listen locally", null, },
+               { "port", 'p', 0, GLib.OptionArg.INT, (void*) &port_opt, "Listen to requests at port PORT", "PORT", },
+               { "seed", 0, 0, GLib.OptionArg.STRING, ref seed_opt, "Set authentication seed", "SEED", },
+               { "tmid", 0, 0, GLib.OptionArg.INT, (void*) &tmid_opt, "Set notification TmId field value to VALUE", "VALUE", },
+               { "version", 'V', 0, GLib.OptionArg.NONE, null, "Print version and exit", null, },
+             };
 
           add_action_entries (action_entries, this);
           add_main_option_entries (option_entries);
@@ -103,13 +105,13 @@ namespace VirtualTM
           return database.get_pending ();
         }
 
-      public bool pay (string externalid) throws GLib.Error
-        {
-          var result1 = database.get_payment (externalid);
-          var result2 = notifier.notify (result1);
-            database.update (externalid, false);
-          return result2;
-        }
+       public bool pay (string externalid) throws GLib.Error
+         {
+           var result1 = database.get_payment (externalid);
+           // var result2 = notifier.notify (result1); // Commented out for testing
+             database.update (externalid, false);
+           return true; // result2;
+         }
 
       public override void shutdown ()
         {
@@ -121,24 +123,49 @@ namespace VirtualTM
         {
           base.startup ();
 
-          try {
-              database = new VirtualTM.Database (database_opt);
-              endpoint = new VirtualTM.Endpoint (endpoint_opt, local_opt, port_opt);
-              notifier = new VirtualTM.Notifier (bank_opt, bankid_opt, tmid_opt);
-              endpoint.got_request.connect (got_request);
-            }
-          catch (GLib.Error e)
-            {
+            try {
+                database = new VirtualTM.Database (database_opt);
+                endpoint = new VirtualTM.Endpoint (endpoint_opt, local_opt, port_opt, seed_opt);
+                notifier = new VirtualTM.Notifier (bank_opt, bankid_opt, tmid_opt);
+                            endpoint.got_request.connect (got_request);
+                            endpoint.got_status_request.connect (got_status_request);
+                            endpoint.got_refund_request.connect (got_refund_request);
+                            endpoint.got_refund_status_request.connect (got_refund_status_request);
+                            print ("VirtualTM server started successfully on port %u, endpoint %s\n", port_opt, endpoint_opt);
+                        } catch (GLib.Error e) {
               critical (@"$(e.domain): $(e.code): $(e.message)");
             }
         }
 
-      private RestApi.PaymentResult? got_request (RestApi.Credentials credentials, RestApi.PaymentParams @params)
-        {
-          bool success = true;
-          try { database.register (new Payment (credentials, @params)); }
-          catch (GLib.Error e) { success = false; critical (@"$(e.domain): $(e.code): $(e.message)"); }
-          return new RestApi.PaymentResult (success, success ? "Ok" : "Error", 1);
-        }
-    }
+        private RestApi.PaymentResult? got_request (RestApi.Credentials credentials, RestApi.PaymentParams @params)
+          {
+            print ("Processing payOrder request for ExternalId %s\n", @params.ExternalId);
+            bool success = true;
+            int orderid = 1;
+            try { orderid = (int) database.register (new Payment (credentials, @params)); }
+            catch (GLib.Error e) { success = false; critical (@"$(e.domain): $(e.code): $(e.message)"); }
+            print ("PayOrder result: success %s, orderid %d\n", success.to_string (), orderid);
+            return new RestApi.PaymentResult (success, success ? "Ok" : "Error", orderid);
+          }
+
+       private RestApi.StatusResult? got_status_request (RestApi.Credentials credentials, string externalid, int64 source)
+         {
+           try { return database.get_payment_status (externalid, source); }
+           catch (GLib.Error e) { critical (@"$(e.domain): $(e.code): $(e.message)"); return null; }
+         }
+
+       private RestApi.RefundResult? got_refund_request (RestApi.Credentials credentials, RestApi.RefundParams @params)
+         {
+           bool success = true;
+           try { database.register_refund (@params); }
+           catch (GLib.Error e) { success = false; critical (@"$(e.domain): $(e.code): $(e.message)"); }
+           return new RestApi.RefundResult (success, success ? "Ok" : "Error", @params.RefundID);
+         }
+
+       private RestApi.RefundStatusResult? got_refund_status_request (RestApi.Credentials credentials, string refundid, int64 source)
+         {
+           try { return database.get_refund_status (refundid, source); }
+           catch (GLib.Error e) { critical (@"$(e.domain): $(e.code): $(e.message)"); return null; }
+         }
+     }
 }

@@ -43,6 +43,24 @@ By the way, you must create the database on your own, so have fun. Here is the c
     "Password"	TEXT NOT NULL,
     "Username"	TEXT NOT NULL,
     "Pending"	INTEGER NOT NULL DEFAULT 1,
+    "Status"	INTEGER NOT NULL DEFAULT 2,
+    PRIMARY KEY("Id" AUTOINCREMENT)
+   );
+
+  CREATE TABLE "Refund" (
+    "Id"	INTEGER NOT NULL,
+    "RefundID"	TEXT NOT NULL UNIQUE,
+    "Source"	INTEGER NOT NULL,
+    "Code"	TEXT,
+    "UrlResponse"	TEXT,
+    "Bank"	INTEGER,
+    "Status"	INTEGER NOT NULL DEFAULT 2,
+    "ReferenceRefund"	TEXT,
+    "ReferenceRefundTM"	TEXT,
+    "ExternalID"	TEXT,
+    "BankId"	TEXT,
+    "TmId"	TEXT,
+    "Msg"	TEXT,
     PRIMARY KEY("Id" AUTOINCREMENT)
    );
 ```
