@@ -13,11 +13,12 @@ Todos los requests requieren headers de autenticación:
 ### Generación de Password
 
 ```
-password = SHA512(username + día + mes + año + semilla + source) → Base64
+password = SHA512(username + día + mes + año + semilla + source) → Base64 (usando digest binario)
 ```
 
-- Día, mes, año sin ceros iniciales (ej: 4 de abril 2024 = 442024)
-- Semilla configurable en el servidor
+- Día, mes, año sin ceros iniciales (ej: 16 de diciembre 2025 = 16122025)
+- Semilla configurable en el servidor (default "test")
+- Para testing, acepta `password: "test"`
 
 ## Endpoints
 
@@ -55,7 +56,7 @@ Content-Type: application/json
   "PayOrderResult": {
     "Resultmsg": "Ok",
     "Success": true,
-    "OrderId": 1
+    "OrderId": "1"
   }
 }
 ```
@@ -90,7 +91,7 @@ password: <string>
     "Bank": 1,
     "BankId": 1234,
     "ExternalId": "123456",
-    "OrderId": 1,
+     "OrderId": "1",
     "Status": 3,
     "TmId": 5678
   }
@@ -247,7 +248,7 @@ password: <string>
 
 - **Puerto:** `--port` (default 8999)
 - **Base de datos:** `--database` (default virtualtm.db)
-- **Semilla auth:** `--seed` (default "defaultseed")
+   - **Semilla auth:** `--seed` (default "test")
 - **Endpoint base:** `--endpoint` (default "/RestExternalPayment.svc")
 
 ## Ejemplos de Uso
