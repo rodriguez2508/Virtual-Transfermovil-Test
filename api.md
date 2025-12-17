@@ -34,6 +34,10 @@ password: <string>
 Content-Type: application/json
 ```
 
+**Status Codes:**
+- `200 OK`: Operación exitosa
+- `400 Bad Request`: Error en autenticación o parámetros
+
 **Request Body:**
 ```json
 {
@@ -81,6 +85,11 @@ username: <string>
 source: <integer>
 password: <string>
 ```
+
+**Status Codes:**
+- `200 OK`: Orden encontrada
+- `404 Not Found`: Orden no encontrada
+- `400 Bad Request`: Error en autenticación
 
 **Response:**
 ```json

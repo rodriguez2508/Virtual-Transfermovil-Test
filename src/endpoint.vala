@@ -35,7 +35,8 @@ namespace VirtualTM
        public bool local { get; construct; }
        public string endpoint { get; construct; }
        public uint port { get; construct; }
-       public string seed { get; construct; }
+        public string seed { get; construct; }
+
 
       /* constants */
       private const string identity = "VirtualTM/" + Config.PACKAGE_VERSION + " ";
@@ -55,7 +56,7 @@ namespace VirtualTM
           else
             server.listen_all (port, 0);
 
-            server.add_handler (endpoint, handle_request);
+            server.add_handler (endpoint, (server, message, path, query) => { try { this.handle_request (server, message, path, query); } catch (GLib.Error e) { message.set_status (Soup.Status.BAD_REQUEST, e.message); } });
         return true;
         }
 
@@ -90,29 +91,9 @@ namespace VirtualTM
           server.disconnect ();
         }
 
-       private void handle_request (Soup.Server server, Soup.ServerMessage message, string path, GLib.HashTable<string, string>? query)
-         {
-           unowned var method = message.get_method ();
-           unowned var status = Soup.Status.OK;
 
-           if (!path.has_prefix (endpoint))
-             {
-               status = Soup.Status.NOT_FOUND;
-               message.set_status (status, Soup.Status.get_phrase (status));
-             }
-           else try
-             {
-               handle_request2 (message, path);
-               status = (Soup.Status) message.get_status ();
-             }
-           catch (GLib.Error e)
-             {
-               status = Soup.Status.BAD_REQUEST;
-               message.set_status (status, Soup.Status.get_phrase (status));
-             }
-         }
 
-       private void handle_request2 (Soup.ServerMessage message, string path) throws GLib.Error
+        public void handle_request (Soup.Server server, Soup.ServerMessage message, string path, GLib.HashTable<string, string>? query) throws GLib.Error
          {
            unowned var body = message.get_request_body ();
            unowned var headers = message.get_request_headers ();
@@ -130,7 +111,7 @@ namespace VirtualTM
            print ("--- END OF REQUEST ---\n\n");
            /* --- LOGGING END --- */
 
-           var subpath = path.substring (endpoint.length);
+            var subpath = path.substring ("/RestExternalPayment.svc".length);
 
            unowned var password = (string?) null;
            unowned var source = (string?) null;
@@ -159,12 +140,15 @@ namespace VirtualTM
                     print ("Parsed payment: Amount %f, ExternalId %s, Source %d\n", payment.request.Amount, payment.request.ExternalId, (int) payment.request.Source);
                     credentials.check_source (payment.request.Source);
                     print ("Source check passed\n");
+                    if (!credentials.validate_password (seed))
+                      throw new EndpointError.MISSING_HEADER ("Invalid password");
                     var result = got_request (credentials, payment.request);
                     if (result != null)
                       {
                         var json = "{\"PayOrderResult\":{\"Resultmsg\":\"" + result.Resultmsg + "\",\"Success\":" + result.Success.to_string () + ",\"OrderId\":\"" + result.OrderId + "\"}}";
                         print ("Sending payOrder response: %s\n", json);
                         message.set_response ("application/json", Soup.MemoryUse.COPY, json.data);
+                                message.set_status (Soup.Status.OK, Soup.Status.get_phrase (Soup.Status.OK));
                       }
                     else
                       message.set_status (Soup.Status.INTERNAL_SERVER_ERROR, Soup.Status.get_phrase (Soup.Status.INTERNAL_SERVER_ERROR));
@@ -185,6 +169,7 @@ namespace VirtualTM
                                 var json = "{\"GetStatusOrderResult\":{\"Resultmsg\":\"" + result.Resultmsg + "\",\"Success\":" + result.Success.to_string () + ",\"Bank\":" + result.Bank.to_string () + ",\"BankId\":" + result.BankId.to_string () + ",\"ExternalId\":\"" + result.ExternalId + "\",\"OrderId\":\"" + result.OrderId + "\",\"Status\":" + result.Status.to_string () + ",\"TmId\":" + result.TmId.to_string () + "}}";
                                 print ("Sending getStatusOrder response: %s\n", json);
                                 message.set_response ("application/json", Soup.MemoryUse.COPY, json.data);
+                        message.set_status (Soup.Status.OK, Soup.Status.get_phrase (Soup.Status.OK));
                               }
                             else
                               message.set_status (Soup.Status.NOT_FOUND, "Payment not found");

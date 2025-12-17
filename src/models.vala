@@ -52,34 +52,30 @@ namespace VirtualTM
              return value == against;
            }
 
-          public static string generate_password (string username, string source, string seed)
-            {
-              // Fixed date for testing: 16/12/2025
-              var day = "16";
-              var month = "12";
-              var year = "2025";
-              var data = username + day + month + year + seed + source;
-              print ("Generating password for data: %s\n", data);
-              var checksum = new GLib.Checksum (GLib.ChecksumType.SHA512);
-              checksum.update (data.data, data.length);
-              uint8 buffer[64];
-              size_t length = 64;
-              checksum.get_digest (buffer, ref length);
-              var result = GLib.Base64.encode (buffer);
-              print ("Generated password: %s\n", result);
-              return result;
-            }
+           public static string generate_password (string username, string source, string seed)
+             {
+               var now = new GLib.DateTime.now_local ();
+               var day = now.get_day_of_month ().to_string ();
+               var month = now.get_month ().to_string ();
+               var year = now.get_year ().to_string ();
+               var data = username + day + month + year + seed + source;
+               print ("Generating password for data: %s\n", data);
+               var checksum = new GLib.Checksum (GLib.ChecksumType.SHA512);
+               checksum.update (data.data, data.length);
+               uint8 buffer[64];
+               size_t length = 64;
+               checksum.get_digest (buffer, ref length);
+               var result = GLib.Base64.encode (buffer);
+               print ("Generated password: %s\n", result);
+               return result;
+             }
 
           public bool validate_password (string seed)
             {
               print ("Validating password for user %s, source %s, seed %s\n", username, source, seed);
-              if (password == "test") {
-                print ("Using test password\n");
-                return true; // For testing
-              }
+              print ("Received password: '%s'\n", password);
               var expected = generate_password (username, source, seed);
               print ("Expected password: %s\n", expected);
-              print ("Received password: %s\n", password);
               var valid = password == expected;
               print ("Password valid: %s\n", valid.to_string ());
               return valid;
@@ -98,21 +94,39 @@ namespace VirtualTM
       }
 
      public class NotifyRequest : GLib.Object, Json.Serializable
-       {
-         public int64 Bank { get; set; }
-         public int64 BankId { get; set; }
-         public int64 Source { get; set; }
-         public int64 TmId { get; set; }
-         public string ExternalId { get; set; }
-         public string Phone { get; set; }
-         public string Msg { get; set; }
-         public int Status { get; set; }
+        {
+          public int64 Bank { get; set; }
+          public int64 BankId { get; set; }
+          public int64 Source { get; set; }
+          public int64 TmId { get; set; }
+          public string ExternalId { get; set; }
+          public string Phone { get; set; }
+          public string Msg { get; set; }
+          public int Status { get; set; }
 
-         public NotifyRequest (int64 bank, int64 bankid, int64 source, int64 tmid, string externalid, string phone, string msg, int status)
-           {
-             Object (Bank : bank, BankId : bankid, Source : source, TmId : tmid, ExternalId : externalid, Phone : phone, Msg : msg, Status : status);
-           }
-       }
+          public NotifyRequest (int64 bank, int64 bankid, int64 source, int64 tmid, string externalid, string phone, string msg, int status)
+            {
+              Object (Bank : bank, BankId : bankid, Source : source, TmId : tmid, ExternalId : externalid, Phone : phone, Msg : msg, Status : status);
+            }
+        }
+
+     public class RefundNotifyRequest : GLib.Object, Json.Serializable
+        {
+          public string RefundID { get; set; }
+          public string ReferenceRefund { get; set; }
+          public string ReferenceRefundTM { get; set; }
+          public bool Success { get; set; }
+          public string Resultmsg { get; set; }
+          public int Status { get; set; }
+          public string ExternalID { get; set; }
+          public string BankId { get; set; }
+          public string TmId { get; set; }
+
+          public RefundNotifyRequest (string refundid, string referencerefund, string referencerefundtm, bool success, string resultmsg, int status, string externalid, string bankid, string tmid)
+            {
+              Object (RefundID : refundid, ReferenceRefund : referencerefund, ReferenceRefundTM : referencerefundtm, Success : success, Resultmsg : resultmsg, Status : status, ExternalID : externalid, BankId : bankid, TmId : tmid);
+            }
+        }
 
     public class NotifyResponse : GenericResult
       {

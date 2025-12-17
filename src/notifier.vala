@@ -79,37 +79,37 @@ namespace VirtualTM
            return true;
          }
 
-       public bool notify_refund (RestApi.RefundParams @params) throws GLib.Error
-         {
-           var urlresponse = @params.UrlResponse;
+        public bool notify_refund (RestApi.RefundParams @params, string externalid, string bankid_str, string tmid_str) throws GLib.Error
+          {
+            var urlresponse = @params.UrlResponse;
 
-           var object = new RestApi.NotifyRequest (@params.Bank, bankid, @params.Source, tmid, @params.RefundID, "", "Refund processed", 3);
-           var length = (size_t) 0;
-           var data = Json.gobject_to_data (object, out length);
+            var object = new RestApi.RefundNotifyRequest (@params.RefundID, "BANK" + @params.RefundID, "TM" + @params.RefundID, true, "Refund successful", 3, externalid, bankid_str, tmid_str);
+            var length = (size_t) 0;
+            var data = Json.gobject_to_data (object, out length);
 
-           var message = new Soup.Message ("POST", urlresponse);
+            var message = new Soup.Message ("POST", urlresponse);
 
-           if (unlikely (message == null))
-             throw new NotifyError.BAD_URI ("Failed to parse '%s'", urlresponse);
-           else
-             {
-               var body = new GLib.Bytes.static (data.data);
-               var headers = message.get_request_headers ();
+            if (unlikely (message == null))
+              throw new NotifyError.BAD_URI ("Failed to parse '%s'", urlresponse);
+            else
+              {
+                var body = new GLib.Bytes.static (data.data);
+                var headers = message.get_request_headers ();
 
-               // For refunds, headers might be different, but assuming same for now
-               headers.append ("password", "dummy"); // Need to pass credentials, but not available here
-               headers.append ("source", @params.Source.to_string ());
-               headers.append ("username", "dummy");
-               message.set_request_body_from_bytes (RestApi.CONTENT_TYPE, body);
+                // For refunds, headers might be different, but assuming same for now
+                headers.append ("password", "dummy"); // Need to pass credentials, but not available here
+                headers.append ("source", @params.Source.to_string ());
+                headers.append ("username", "dummy");
+                message.set_request_body_from_bytes (RestApi.CONTENT_TYPE, body);
 
-               var response_data = session.send_and_read (message);
-               var response_object = Json.gobject_from_data (typeof (RestApi.NotifyResponse), (string) response_data.get_data (), (ssize_t) response_data.get_size ());
-               var response = response_object as RestApi.NotifyResponse;
+                var response_data = session.send_and_read (message);
+                var response_object = Json.gobject_from_data (typeof (RestApi.NotifyResponse), (string) response_data.get_data (), (ssize_t) response_data.get_size ());
+                var response = response_object as RestApi.NotifyResponse;
 
-               if (response.Success == false)
-                 throw new NotifyError.FAILED ("%s", response.Resultmsg);
-             }
-           return true;
-         }
+                if (response.Success == false)
+                  throw new NotifyError.FAILED ("%s", response.Resultmsg);
+              }
+            return true;
+          }
     }
 }
