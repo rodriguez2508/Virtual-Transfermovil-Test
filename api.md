@@ -1,6 +1,8 @@
 # VirtualTM API Documentation
 
-VirtualTM es un emulador de la API REST de Transfermovil para Cuba. Esta documentación describe los endpoints implementados basados en la API oficial.
+**IMPORTANTE: Esta NO es la documentación oficial de la API de Transfermovil. Es una documentación del emulador VirtualTM, que simula la API externa de pagos de Transfermovil para fines de desarrollo y testing. Para la documentación oficial, consulta los recursos proporcionados por ETECSA o Transfermovil.**
+
+VirtualTM es un emulador de la API REST (y próximamente SOAP) de Transfermovil para Cuba. Esta documentación describe los endpoints implementados basados en la API oficial de servicios externos de pago.
 
 ## Autenticación
 
@@ -16,9 +18,9 @@ Todos los requests requieren headers de autenticación:
 password = SHA512(username + día + mes + año + semilla + source) → Base64 (usando digest binario)
 ```
 
-- Día, mes, año sin ceros iniciales (ej: 16 de diciembre 2025 = 16122025)
+- Día, mes, año sin ceros iniciales (ej: 17 de diciembre 2025 = 17122025)
 - Semilla configurable en el servidor (default "test")
-- Para testing, acepta `password: "test"`
+- Nota: El servidor valida la contraseña generada dinámicamente; no acepta contraseñas fijas como "test" a menos que se configure explícitamente.
 
 ## Endpoints
 
@@ -189,7 +191,223 @@ password: <string>
 }
 ```
 
-## Notificaciones
+## Endpoints SOAP (Próximamente)
+
+VirtualTM actualmente implementa solo REST, pero la API oficial incluye soporte SOAP. Aquí se documentan para referencia futura.
+
+### 1. Crear Orden de Pago (SOAP)
+
+**URL:** `POST https://SERVIDOR:PUERTO/ExternalPaymentServices.svc?wsdl` (Operación: PayOrder)
+
+**Headers:**
+```
+username: <string>
+source: <integer>
+password: <string>
+Content-Type: text/xml
+```
+
+**Request Body (XML):**
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:ext="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Requests">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <tem:PayOrder>
+         <tem:request>
+            <ext:Amount>1</ext:Amount>
+            <ext:Currency>CUP</ext:Currency>
+            <ext:Description>test</ext:Description>
+            <ext:ExternalId>1478</ext:ExternalId>
+            <ext:Phone>5352880000</ext:Phone>
+            <ext:Source>12</ext:Source>
+            <ext:UrlResponse>http://localhost</ext:UrlResponse>
+            <ext:ValidTime>0</ext:ValidTime>
+         </tem:request>
+      </tem:PayOrder>
+   </soapenv:Body>
+</soapenv:Envelope>
+```
+
+**Response (XML):**
+```xml
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+   <s:Body>
+      <PayOrderResponse xmlns="http://tempuri.org/">
+         <PayOrderResult xmlns:a="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Responses" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+            <a:Resultmsg>Mensaje</a:Resultmsg>
+            <a:Success>true</a:Success>
+            <a:OrderId>1234</a:OrderId>
+         </PayOrderResult>
+      </PayOrderResponse>
+   </s:Body>
+</s:Envelope>
+```
+
+### 2. Consultar Estado de Pago (SOAP)
+
+**URL:** `POST https://SERVIDOR:PUERTO/ExternalPaymentServices.svc?wsdl` (Operación: GetStatusOrder)
+
+**Request Body (XML):**
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:ext="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Requests">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <tem:GetStatusOrder>
+         <tem:request>
+            <ext:ExternalId>1478</ext:ExternalId>
+            <ext:Source>12</ext:Source>
+         </tem:request>
+      </tem:GetStatusOrder>
+   </soapenv:Body>
+</soapenv:Envelope>
+```
+
+**Response (XML):**
+```xml
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+   <s:Body>
+      <GetStatusOrderResponse xmlns="http://tempuri.org/">
+         <GetStatusOrderResult xmlns:a="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Responses" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+            <a:Resultmsg>mensaje</a:Resultmsg>
+            <a:Success>true/false</a:Success>
+            <a:BankId>Id Banco</a:BankId>
+            <a:ExternalId>Id de Transaccion del comercio</a:ExternalId>
+            <a:OrderId>Id de Orden de pago</a:OrderId>
+            <a:Status>Estado</a:Status>
+            <a:TmId>Id de Transaccion de Transfermovil</a:TmId>
+            <a:Bank>No. de banco</a:Bank>
+         </GetStatusOrderResult>
+      </GetStatusOrderResponse>
+   </s:Body>
+</s:Envelope>
+```
+
+### 3. Crear Orden de Devolución (SOAP)
+
+**URL:** `POST https://SERVIDOR:PUERTO/ExternalPaymentServices.svc?wsdl` (Operación: RefundPay)
+
+**Request Body (XML):**
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:ext="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Requests">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <tem:RefundPay>
+         <tem:request>
+            <ext:Bank>1</ext:Bank>
+            <ext:Code>dsf</ext:Code>
+            <ext:RefundID>23423444</ext:RefundID>
+            <ext:Source>1</ext:Source>
+            <ext:UrlResponse>as</ext:UrlResponse>
+         </tem:request>
+      </tem:RefundPay>
+   </soapenv:Body>
+</soapenv:Envelope>
+```
+
+**Response (XML):**
+```xml
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+   <s:Body>
+      <RefundPayResponse xmlns="http://tempuri.org/">
+         <RefundPayResult xmlns:a="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Responses" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+            <a:Resultmsg>Orden insertada</a:Resultmsg>
+            <a:Success>true</a:Success>
+            <a:RefundID_Order>19</a:RefundID_Order>
+         </RefundPayResult>
+      </RefundPayResponse>
+   </s:Body>
+</s:Envelope>
+```
+
+### 4. Consultar Estado de Devolución (SOAP)
+
+**URL:** `POST https://SERVIDOR:PUERTO/ExternalPaymentServices.svc?wsdl` (Operación: getStatusRefundOrder)
+
+**Request Body (XML):**
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:ext="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Requests">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <tem:getStatusRefundOrder>
+         <tem:request>
+            <ext:RefundID>123</ext:RefundID>
+            <ext:Source>1</ext:Source>
+         </tem:request>
+      </tem:getStatusRefundOrder>
+   </soapenv:Body>
+</soapenv:Envelope>
+```
+
+**Response (XML):**
+```xml
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+   <s:Body>
+      <getStatusRefundOrderResponse xmlns="http://tempuri.org/">
+         <getStatusRefundOrderResult xmlns:a="http://schemas.datacontract.org/2004/07/ExternalPayment.DataContracts.Responses" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+            <a:Success>true</a:Success>
+            <a:BankId>1</a:BankId>
+            <a:ExternalId>123</a:ExternalId>
+            <a:ReferenceRefund>BANK123</a:ReferenceRefund>
+            <a:Status>1</a:Status>
+            <a:TmId>1234</a:TmId>
+            <a:Resultmsg>test api</a:Resultmsg>
+         </getStatusRefundOrderResult>
+      </getStatusRefundOrderResponse>
+   </s:Body>
+</s:Envelope>
+```
+
+## Integración Móvil y Web
+
+### Estructura de QR
+
+Para generar un código QR que la app de Transfermovil pueda leer, usa la siguiente estructura JSON:
+
+```json
+{
+  "id_transaccion": "nro_operacion",
+  "importe": 1.0,
+  "moneda": "CUP",
+  "numero_proveedor": 10,
+  "version": ""
+}
+```
+
+- `id_transaccion`: ID de transacción externa (debe coincidir con el ExternalId usado en payOrder, máx 2 caracteres no numéricos + 10 numéricos).
+- `importe`: Monto decimal.
+- `moneda`: "CUP" o "CUC".
+- `numero_proveedor`: Identificador del proveedor.
+- `version`: Campo opcional.
+
+### Mecanismo de Intents (Android)
+
+Para enviar parámetros desde una app de tercero a Transfermovil vía Intent:
+
+```java
+Intent sendIntent = new Intent();
+sendIntent.setPackage("cu.etecsa.cubacel.tr.tm");
+sendIntent.setAction(Intent.ACTION_SEND);
+sendIntent.putExtra(Intent.EXTRA_TEXT, jsonParametros);
+sendIntent.setType("text/plain");
+startActivity(sendIntent);
+```
+
+- `jsonParametros`: JSON idéntico al usado para el QR (ver arriba).
+- Paquete: `cu.etecsa.cubacel.tr.tm`.
+
+### Enlaces para Levantar App desde Web
+
+Para abrir Transfermovil desde un navegador web o enlace:
+
+```html
+<a href="transfermovil://tm_compra_en_linea/action?id_transaccion=$ID_Trans&importe=$Imp&moneda=CUP&numero_proveedor=$cod">Abrir app de pago</a>
+```
+
+- Reemplaza `$ID_Trans`, `$Imp`, `$cod` con los valores reales.
+- `id_transaccion`: ID de transacción.
+- `importe`: Monto.
+- `moneda`: "CUP".
+- `numero_proveedor`: Código del proveedor.
 
 ### Notificación de Pago
 
@@ -253,6 +471,11 @@ password: <string>
 - **404 Not Found**: Endpoint no encontrado, pago/devolución no existe
 - **500 Internal Server Error**: Error interno del servidor
 
+### Errores Comunes
+- **Not authorized, User not present**: Acceso desde IP no autorizada para el usuario.
+- **Not authorized, username or password incorrect**: Contraseña o usuario/source incorrectos.
+- **La orden ya existe**: ID de orden ya registrado con el mismo source y username (no es error fatal, solo informativo).
+
 ## Configuración del Servidor
 
 - **Puerto:** `--port` (default 8999)
@@ -278,7 +501,8 @@ curl -X GET -H "username:user" -H "password:test" -H "source:12" \
 
 ## Notas
 
-- Para testing, el servidor acepta `password: test` como válido.
 - La base de datos debe crearse manualmente con el SQL en README.md.
-- Estados se actualizan automáticamente en notificaciones exitosas.</content>
+- Estados se actualizan automáticamente en notificaciones exitosas.
+- Para notificaciones, usa URLs accesibles vía VPN (no dominios públicos, ya que los VPN no tienen DNS; usa IPs directas).
+- VirtualTM no maneja dinero real; es solo para emulación y testing.</content>
 <parameter name="filePath">api.md

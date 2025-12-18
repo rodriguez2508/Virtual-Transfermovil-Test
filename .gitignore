@@ -20,3 +20,9 @@
 #
 
 /.vscode/*
+
+#
+# Database
+#
+
+virtualtm.db
