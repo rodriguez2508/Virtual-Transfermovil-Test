@@ -86,26 +86,31 @@ By the way, you must create the database on your own, so have fun. Here is the c
    ninja -C build
    ```
 
-3. Crea la base de datos:
-   ```bash
-   sqlite3 virtualtm.db <<EOF
-   CREATE TABLE "Payment" (
-     "Id" INTEGER NOT NULL,
-     "Amount" REAL NOT NULL,
-     "Currency" TEXT NOT NULL,
-     "Description" TEXT NOT NULL,
-     "ExternalId" TEXT NOT NULL UNIQUE,
-     "Phone" TEXT NOT NULL,
-     "Source" INTEGER NOT NULL,
-     "UrlResponse" TEXT NOT NULL,
-     "ValidTime" INTEGER NOT NULL,
-     "Password" TEXT NOT NULL,
-     "Username" TEXT NOT NULL,
-     "Pending" INTEGER NOT NULL DEFAULT 1,
-     PRIMARY KEY("Id" AUTOINCREMENT)
-   );
-   EOF
-   ```
+3. Crea la base de datos (o usa la de ejemplo):
+   - Para una BD vacía:
+     ```bash
+     sqlite3 virtualtm.db <<EOF
+     CREATE TABLE "Payment" (
+       "Id" INTEGER NOT NULL,
+       "Amount" REAL NOT NULL,
+       "Currency" TEXT NOT NULL,
+       "Description" TEXT NOT NULL,
+       "ExternalId" TEXT NOT NULL UNIQUE,
+       "Phone" TEXT NOT NULL,
+       "Source" INTEGER NOT NULL,
+       "UrlResponse" TEXT NOT NULL,
+       "ValidTime" INTEGER NOT NULL,
+       "Password" TEXT NOT NULL,
+       "Username" TEXT NOT NULL,
+       "Pending" INTEGER NOT NULL DEFAULT 1,
+       PRIMARY KEY("Id" AUTOINCREMENT)
+     );
+     EOF
+     ```
+   - O copia la BD de ejemplo con datos de prueba:
+     ```bash
+     cp virtualtm-example.db virtualtm.db
+     ```
 
 ### Ejecución
 1. Ejecuta el servidor en segundo plano:
